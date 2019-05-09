@@ -34,9 +34,6 @@ def i_run_once():
             imgg = imutils.resize(imgg, width=700)
             cv2.putText(imgg, 'place Analog Gauge in front of camera', (5, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.8,(255, 0, 0), 2)
             cv2.imshow('cam', imgg)
-            time.sleep(0.1)
-            file = "image_AG.png"
-            cv2.imwrite(file, imgg)
             k = cv2.waitKey(10)
             if k == 27:
                 break
@@ -65,9 +62,9 @@ def get_current_value(img, min_angle, max_angle, min_value, max_value, x, y, r, 
     #print "radius: %s" %r
 
     diff1LowerBound = 0.1 #diff1LowerBound and diff1UpperBound determine how close the line should be from the center
-    diff1UpperBound = 0.5
-    diff2LowerBound = 0.5 #diff2LowerBound and diff2UpperBound determine how close the other point of the line should be to the outside of the gauge
-    diff2UpperBound = 1.5
+    diff1UpperBound = 2.5
+    diff2LowerBound = 0.1 #diff2LowerBound and diff2UpperBound determine how close the other point of the line should be to the outside of the gauge
+    diff2UpperBound = 2.5
 
     for i in range(0, len(lines)):
         for x1, y1, x2, y2 in lines[i]:
@@ -89,13 +86,6 @@ def get_current_value(img, min_angle, max_angle, min_value, max_value, x, y, r, 
     y1 = final_line_list[0][1]
     x2 = final_line_list[0][2]
     y2 = final_line_list[0][3]
-    cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
-
-    #x1 = final_line_list[0][0]
-    #y1 = final_line_list[0][1]
-    #x2 = final_line_list[0][2]
-    #y2 = final_line_list[0][3]
-    #cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
     dist_pt_0 = dist_2_pts(x, y, x1, y1)
     dist_pt_1 = dist_2_pts(x, y, x2, y2)
@@ -170,12 +160,10 @@ def main():
         ret, imgg = cap.read()
         imgg = imutils.resize(imgg, width=500)
         cv2.imshow('cam', imgg)
-        filename = 'image_AG.png'
-        cv2.imwrite(filename,imgg)
         k = cv2.waitKey(10)
         if k == 27:
             break
-        img = cv2.imread('image_AG.png')
+        img = imgg
         height, width, channels = img.shape
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1, 20, np.array([]), 100, 50, int(height*0.30), int(height*0.40))
@@ -195,7 +183,6 @@ def main():
         k = cv2.waitKey(10)
         if k == 27:
             break
-
 
 if __name__=='__main__':
     i_run_once()
