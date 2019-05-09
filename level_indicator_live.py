@@ -38,7 +38,6 @@ def notdetected():
             k = cv2.waitKey(10)
             if k == 27:
                 break
-            time.sleep(0.1)
     cap.release()
     cv2.destroyAllWindows()
     main()
@@ -63,7 +62,7 @@ def i_run_once():
     initfunc = True
 
 def ping():
-    print("done")
+    print("CSV Updated")
     with open('Level_Detect.csv', 'a') as csvFile:
         writer = csv.writer(csvFile)
         writer.writerow(data)
