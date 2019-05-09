@@ -145,7 +145,7 @@ def main():
             cv2.drawContours(image, [c], -1, (0, 255, 0), 2)
             x, y, w, h = cv2.boundingRect(c)  # offsets - with this you get 'mask'
             cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
-            cv2.imshow('cutted contour', image[y:y + h, x:x + w])
+            #cv2.imshow('cutted contour', image[y:y + h, x:x + w])
             crop_img = image[y:y + h, x:x + w]
             # show the output image
 
@@ -158,10 +158,10 @@ def main():
             PixelsInRange = cv2.countNonZero(mask)
             #print("PixelsInRange", PixelsInRange)
             frac_red = np.divide(float(PixelsInRange), int(size))
-            print(frac_red)
+            #print(frac_red)
             percent_red = np.multiply((float(frac_red)), 100)
             print('Level : ' + str(percent_red) + '%')
-            cv2.imshow('mask',mask)
+            #cv2.imshow('mask',mask)
             data = [[percent_red]]
 
         cv2.waitKey(0)
