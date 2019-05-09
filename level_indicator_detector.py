@@ -4,8 +4,15 @@ import numpy as np
 import cv2
 
 # load the image, convert it to grayscale, and blur it
-image = cv2.imread("images/1.jpg")
-image = imutils.resize(image, width=400)
+img = cv2.imread("levelindicatorimages/Lvl9.jpg")
+scale_percent = 40 # percent of original size
+width = int(img.shape[1] * scale_percent / 100)
+height = int(img.shape[0] * scale_percent / 100)
+dim = (width, height)
+# resize image
+image = cv2.resize(img, dim, interpolation = cv2.INTER_AREA)
+cv2.imshow('s',image)
+# = imutils.resize(resized, width=400)
 grayScale = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
 # Find edges in the image using canny edge detection method
@@ -85,9 +92,9 @@ for c in cnts:
     cX = int(M['m10'] / M['m00'])
     cY = int(M['m01'] / M['m00'])
     area = cv2.contourArea(c)
-    print(area)
+    print('area' ,area)
     perimeter = cv2.arcLength(c, True)
-    print(perimeter)
+    print('p ',perimeter)
     # call detectShape for contour c
     shape = detectShape(c)
     # Outline the contours
@@ -97,22 +104,20 @@ for c in cnts:
     cv2.imshow('cutted contour', image[y:y + h, x:x + w])
     crop_img = image[y:y + h, x:x + w]
     # show the output image
-
     hsv = cv2.cvtColor(crop_img, cv2.COLOR_BGR2HSV)
     mask0 = cv2.inRange(hsv, lower_range, upper_range)
     mask1 = cv2.inRange(hsv, lower_red, upper_red)
-    size = crop_img.size / 3
+    size = area-perimeter
+    print('size ',size)
     mask = mask0 + mask1
-    print(mask)
-    blurred = cv2.GaussianBlur(mask, (11, 11), 0)
     PixelsInRange = cv2.countNonZero(mask)
-    print("PixelsInRange", PixelsInRange)
-    frac_red = np.divide(float(PixelsInRange), int(size))
-    print(frac_red)
+    div = PixelsInRange + perimeter
+    print('div ', div)
+    frac_red = np.divide(float(div), int(size))
     percent_red = np.multiply((float(frac_red)), 100)
     print('Level : ' + str(percent_red) + '%')
-
 
     cv2.imshow('mask',mask)
 
 cv2.waitKey(0)
+
