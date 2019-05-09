@@ -52,8 +52,6 @@ def i_run_once():
     cv2.destroyAllWindows()
     initfunc = False
 
-
-
 def main():
 
     cap = cv2.VideoCapture(0)
@@ -65,15 +63,8 @@ def main():
         ret, imgg = cap.read()
         imgg = imutils.resize(imgg, width=500)
         cv2.imshow('cam', imgg)
-        filename = 'image_LD.png'
-        cv2.imwrite(filename,imgg)
-        img = cv2.imread('image_LD.png')
-        ret, image = cap.read()
-        image = imutils.resize(image, width=400)
+        image = imutils.resize(imgg, width=400)
         grayScale = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
-        # Find edges in the image using canny edge detection method
-        # Calculate lower threshold and upper threshold using sigma = 0.33
         sigma = 0.33
         v = np.median(grayScale)
         low = int(max(0, (1.0 - sigma) * v))
@@ -92,14 +83,13 @@ def main():
 
         # loop over the contours
         for c in cnts:
-
             # compute the moment of contour
             M = cv2.moments(c)
             # From moment we can calculte area, centroid etc
             # The center or centroid can be calculated as follows
             # print(M['m00'])
             if M['m00'] == 0:
-                main()
+                break
             cX = int(M['m10'] / M['m00'])
             cY = int(M['m01'] / M['m00'])
             area = cv2.contourArea(c)
@@ -127,6 +117,8 @@ def main():
             percent_red = np.multiply((float(frac_red)), 100)
             if percent_red > 100:
                 percent_red  = 100
+            if percent_red < 0:
+                break
 
             print('Level : ' + str(int(percent_red)) + '%')
             data = [int(percent_red)]
