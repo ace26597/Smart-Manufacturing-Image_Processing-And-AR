@@ -127,7 +127,7 @@ def main():
             M = cv2.moments(c)
             # From moment we can calculte area, centroid etc
             # The center or centroid can be calculated as follows
-            print(M['m00'])
+            #print(M['m00'])
             if M['m00'] == 0:
                 print('Level Indicator Not Found \n 5 second window to place Level indicator in front of camera')
                 cap.release()
@@ -138,9 +138,9 @@ def main():
             cX = int(M['m10'] / M['m00'])
             cY = int(M['m01'] / M['m00'])
             area = cv2.contourArea(c)
-            print('area : ', area)
+            #print('area : ', area)
             perimeter = cv2.arcLength(c, True)
-            print('peremeter : ',perimeter)
+            #print('peremeter : ',perimeter)
             # Outline the contours
             cv2.drawContours(image, [c], -1, (0, 255, 0), 2)
             x, y, w, h = cv2.boundingRect(c)  # offsets - with this you get 'mask'
@@ -156,7 +156,7 @@ def main():
             mask = mask0 + mask1
             blurred = cv2.GaussianBlur(mask, (11, 11), 0)
             PixelsInRange = cv2.countNonZero(mask)
-            print("PixelsInRange", PixelsInRange)
+            #print("PixelsInRange", PixelsInRange)
             frac_red = np.divide(float(PixelsInRange), int(size))
             print(frac_red)
             percent_red = np.multiply((float(frac_red)), 100)
@@ -171,4 +171,3 @@ if __name__=='__main__':
     i_run_once()
     main()
     schedule.every(10).seconds.do(run_threaded, ping)
-    
