@@ -1,4 +1,5 @@
 # import the necessary packages
+import threading
 from threading import Thread
 
 import imutils
@@ -18,6 +19,16 @@ upper_red = np.array([180,255,255])
 # load the image, convert it to grayscale, and blur it
 initfunc = False
 notdetectedvar = False
+global data
+
+def job():
+    print("CSV Updated")
+    global data
+    with open('Level_Detect.csv', 'a') as csvFile:
+        writer = csv.writer(csvFile)
+        writer.writerow(data)
+    csvFile.close()
+
 
 def i_run_once():
     global initfunc
@@ -41,18 +52,6 @@ def i_run_once():
     cv2.destroyAllWindows()
     initfunc = False
 
-def ping():
-    print("CSV Updated")
-    with open('Level_Detect.csv', 'a') as csvFile:
-        writer = csv.writer(csvFile)
-        writer.writerow(data)
-    csvFile.close()
-
-def run_threaded(ping):
-    job_thread = Thread(target=ping)
-    job_thread.start()
-
-schedule.every(10).seconds.do(run_threaded, ping)
 
 
 def main():
@@ -62,14 +61,12 @@ def main():
         cap = cv2.VideoCapture(1)
 
     while (cap.isOpened()):
+        global data
         ret, imgg = cap.read()
         imgg = imutils.resize(imgg, width=500)
         cv2.imshow('cam', imgg)
         filename = 'image_LD.png'
         cv2.imwrite(filename,imgg)
-        k = cv2.waitKey(10)
-        if k == 27:
-            break
         img = cv2.imread('image_LD.png')
         ret, image = cap.read()
         image = imutils.resize(image, width=400)
@@ -95,47 +92,51 @@ def main():
 
         # loop over the contours
         for c in cnts:
-            try:
-                # compute the moment of contour
-                M = cv2.moments(c)
-                # From moment we can calculte area, centroid etc
-                # The center or centroid can be calculated as follows
-                # print(M['m00'])
-                if M['m00'] == 0:
-                    main()
-                cX = int(M['m10'] / M['m00'])
-                cY = int(M['m01'] / M['m00'])
-                area = cv2.contourArea(c)
-                # print('area : ', area)
-                perimeter = cv2.arcLength(c, True)
-                # print('peremeter : ',perimeter)
-                # Outline the contours
-                cv2.drawContours(image, [c], -1, (0, 255, 0), 2)
-                x, y, w, h = cv2.boundingRect(c)  # offsets - with this you get 'mask'
-                cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
-                # cv2.imshow('cutted contour', image[y:y + h, x:x + w])
-                crop_img = image[y:y + h, x:x + w]
-                # show the output image
 
-                hsv = cv2.cvtColor(crop_img, cv2.COLOR_BGR2HSV)
-                mask0 = cv2.inRange(hsv, lower_range, upper_range)
-                mask1 = cv2.inRange(hsv, lower_red, upper_red)
-                size = area - perimeter
-                # print('size ', size)
-                mask = mask0 + mask1
-                PixelsInRange = cv2.countNonZero(mask)
-                div = PixelsInRange + perimeter
-                # print('div ', div)
-                frac_red = np.divide(float(div), int(size))
-                percent_red = np.multiply((float(frac_red)), 100)
-                print('Level : ' + str(percent_red) + '%')
-                data = [percent_red]
-            except Exception as e:
-                None
-        
-    schedule.run_pending()
+            # compute the moment of contour
+            M = cv2.moments(c)
+            # From moment we can calculte area, centroid etc
+            # The center or centroid can be calculated as follows
+            # print(M['m00'])
+            if M['m00'] == 0:
+                main()
+            cX = int(M['m10'] / M['m00'])
+            cY = int(M['m01'] / M['m00'])
+            area = cv2.contourArea(c)
+            # print('area : ', area)
+            perimeter = cv2.arcLength(c, True)
+            # print('peremeter : ',perimeter)
+            # Outline the contours
+            cv2.drawContours(image, [c], -1, (0, 255, 0), 2)
+            x, y, w, h = cv2.boundingRect(c)  # offsets - with this you get 'mask'
+            cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            # cv2.imshow('cutted contour', image[y:y + h, x:x + w])
+            crop_img = image[y:y + h, x:x + w]
+            # show the output image
+
+            hsv = cv2.cvtColor(crop_img, cv2.COLOR_BGR2HSV)
+            mask0 = cv2.inRange(hsv, lower_range, upper_range)
+            mask1 = cv2.inRange(hsv, lower_red, upper_red)
+            size = area - perimeter
+            # print('size ', size)
+            mask = mask0 + mask1
+            PixelsInRange = cv2.countNonZero(mask)
+            div = PixelsInRange + perimeter
+            # print('div ', div)
+            frac_red = np.divide(float(div), int(size))
+            percent_red = np.multiply((float(frac_red)), 100)
+            if percent_red > 100:
+                percent_red  = 100
+
+            print('Level : ' + str(int(percent_red)) + '%')
+            data = [int(percent_red)]
+
+        schedule.run_pending()
+        k = cv2.waitKey(10)
+        if k == 27:
+            break
 
 if __name__=='__main__':
     i_run_once()
+    schedule.every(10).seconds.do(job)
     main()
-    schedule.every(10).seconds.do(run_threaded, ping)
