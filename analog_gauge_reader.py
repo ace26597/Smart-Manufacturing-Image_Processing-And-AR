@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
-import csv
-filename = 'images/1.jpg'
+
+filename = 'images/Gauge2.jpg'
 
 def avg_circles(circles, b):
     avg_x=0
@@ -40,8 +40,9 @@ def preprocess(gauge_number, file_type):
     #gray = cv2.medianBlur(gray, 5)
 
     #detect circles
-    circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1, 20, np.array([]), 100, 50, int(height*0.30), int(height*0.40))
-
+    #circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1, 20, np.array([]), 100, 50, int(height*0.30), int(height*0.40))
+    circles = cv2.HoughCircles(gray,cv2.HOUGH_GRADIENT,1,400,
+                            param1=15,param2=40,minRadius=10,maxRadius=0)
     # average found circles, found it to be more accurate than trying to tune HoughCircles parameters to get just the right one
     a, b, c = circles.shape
     x,y,r = avg_circles(circles, b)
@@ -54,7 +55,7 @@ def preprocess(gauge_number, file_type):
     cv2.circle(img, (x, y), r, (0, 0, 255), 3, cv2.LINE_AA)  # draw circle
     cv2.circle(img, (x, y), 2, (0, 255, 0), 3, cv2.LINE_AA)  # draw center of circle
     #for testing, output circles on image
-    cv2.imwrite('gauge-%s-circles.%s' % (gauge_number, file_type), img)
+    #cv2.imwrite('gauge-%s-circles.%s' % (gauge_number, file_type), img)
 
 
     #for calibration, plot lines from center going out at every 10 degrees and add marker
@@ -94,21 +95,13 @@ def preprocess(gauge_number, file_type):
         cv2.line(img, (int(p1[i][0]), int(p1[i][1])), (int(p2[i][0]), int(p2[i][1])),(0, 255, 0), 2)
         cv2.putText(img, '%s' %(int(i*separation)), (int(p_text[i][0]), int(p_text[i][1])), cv2.FONT_HERSHEY_SIMPLEX, 0.3,(0,0,0),1,cv2.LINE_AA)
 
-    cv2.imshow('gauge-%s-calibration.%s' % (gauge_number, file_type), img)
-    cv2.waitKey(0)
-    cv2.imwrite('gauge-%s-calibration.%s' % (gauge_number, file_type), img)
-    img = img[r2:r4, r1:r3]
-    cv2.imwrite('gauge-%s-crop.%s' % (gauge_number, file_type), img)
+
+    #cv2.imwrite('gauge-%s-calibration.%s' % (gauge_number, file_type), img)
+
     return  x, y, r
 
 def calibrate_gauge(gauge_number, file_type):
-    #print ('gauge number: %s' %gauge_number)
-    #min_angle = input('Min angle (lowest possible angle of dial) - in degrees: ') #the lowest possible angle
-    #max_angle = input('Max angle (highest possible angle) - in degrees: ') #highest possible angle
-    #min_value = input('Min value: ') #usually zero
-    #max_value = input('Max value: ') #maximum reading of the gauge
-    #units = input('Enter units: ')
-    min_angle = 60
+    min_angle = 50
     max_angle = 300
     min_value = 0
     max_value = 240
@@ -164,10 +157,10 @@ def get_current_value(img, min_angle, max_angle, min_value, max_value, x, y, r, 
     final_line_list = []
     #print "radius: %s" %r
 
-    diff1LowerBound = 0.15 #diff1LowerBound and diff1UpperBound determine how close the line should be from the center
-    diff1UpperBound = 0.25
-    diff2LowerBound = 0.5 #diff2LowerBound and diff2UpperBound determine how close the other point of the line should be to the outside of the gauge
-    diff2UpperBound = 1.0
+    diff1LowerBound = 0 #diff1LowerBound and diff1UpperBound determine how close the line should be from the center
+    diff1UpperBound = 0.3
+    diff2LowerBound = 0.1 #diff2LowerBound and diff2UpperBound determine how close the other point of the line should be to the outside of the gauge
+    diff2UpperBound = 2.0
 
     for i in range(0, len(lines)):
         for x1, y1, x2, y2 in lines[i]:
@@ -239,7 +232,6 @@ def get_current_value(img, min_angle, max_angle, min_value, max_value, x, y, r, 
 
     new_min = float(min_value)
     new_max = float(max_value)
-
     old_value = final_angle
 
     old_range = (old_max - old_min)
@@ -266,11 +258,6 @@ def main():
     val,level = get_current_value(img, min_angle, max_angle, min_value, max_value, x, y, r, gauge_number, file_type)
     print ("Current reading: %s %s" %(val, units))
     print ("Gauge Reading Level : %s" %(level))
-    data = [[val],[level]]
-    with open('gauge.csv', 'a') as csvFile:
-        writer = csv.writer(csvFile)
-        writer.writerow(data)
-    csvFile.close()
 
 if __name__=='__main__':
     main()
