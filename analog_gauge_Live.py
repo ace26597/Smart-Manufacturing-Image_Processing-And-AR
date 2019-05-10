@@ -14,7 +14,6 @@ max_value = 240
 units = 'psi'
 
 def job():
-    print("CSV Updated")
     global data
     with open('gauge.csv', 'a') as csvFile:
         writer = csv.writer(csvFile)
@@ -46,8 +45,8 @@ def get_current_value(gray, min_angle, max_angle, min_value, max_value, x, y, r)
     # apply thresholding which helps for finding lines
     th, dst2 = cv2.threshold(gray, 175, 255, cv2.THRESH_BINARY_INV);
     cv2.imshow('dst',dst2)
-    minLineLength = 10
-    lines = cv2.HoughLinesP(image=dst2, rho=1, theta=np.pi / 180, threshold=600, minLineLength=minLineLength,
+    minLineLength = 8
+    lines = cv2.HoughLinesP(image=dst2, rho=3, theta=np.pi / 180, threshold=50, minLineLength=minLineLength,
                             maxLineGap=0)  # rho is set to 3 to detect more lines, easier to get more then filter them out later
 
     if lines is not None:
@@ -78,7 +77,8 @@ def get_current_value(gray, min_angle, max_angle, min_value, max_value, x, y, r)
         y1 = final_line_list[0][1]
         x2 = final_line_list[0][2]
         y2 = final_line_list[0][3]
-
+        #cv2.line(dst2, (x1, y1), (x2, y2), (0, 255, 0), 2)
+        #cv2.imshow('gauge', dst2)
         # find the farthest point from the center to be what is used to determine the angle
         dist_pt_0 = dist_2_pts(x, y, x1, y1)
         dist_pt_1 = dist_2_pts(x, y, x2, y2)
@@ -155,18 +155,16 @@ def main():
             a, b, c = circles.shape
             x, y, r = avg_circles(circles, b)
             val, level = get_current_value(gray, min_angle, max_angle, min_value, max_value, x, y, r)
-            if val < 0 or val > 270:
+            val = int(val)
+            if val < 0 or val > 241:
                 main()
-
             print("Current reading: %s %s" % (val, units))
             print("Gauge Reading Level : %s" % (level))
             data = [val, level]
-
         schedule.run_pending()
         k = cv2.waitKey(10)
         if k == 27:
             break
-
 
 if __name__=='__main__':
     i_run_once()
@@ -177,4 +175,3 @@ if __name__=='__main__':
     main()
     cap.release()
     cv2.destroyAllWindows()
-
